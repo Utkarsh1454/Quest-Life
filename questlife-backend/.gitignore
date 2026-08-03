@@ -1,0 +1,17 @@
+# Backend environment & secrets
+.env
+.env.*
+!.env.example
+
+# Database
+*.db
+*.sqlite
+questlife.db
+
+# Python bytecode & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+venv/
+.venv/
