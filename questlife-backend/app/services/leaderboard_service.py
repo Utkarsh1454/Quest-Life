@@ -12,15 +12,15 @@ def calculate_power_score(total_xp: int, last_activity_date: date | datetime | N
     Calculate time-decayed Power Score:
     Score = round(total_xp * (0.9 ^ days_inactive))
     """
-    if not last_activity_date:
-        return total_xp
+    if total_xp <= 0:
+        return 0
 
     if isinstance(last_activity_date, datetime):
         activity_day = last_activity_date.date()
     else:
         activity_day = last_activity_date
 
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     days_inactive = max(0, (today - activity_day).days)
     
     # Apply exponential decay: 0.9 ^ days_inactive
