@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SignIn } from '@clerk/clerk-react';
+import { dark } from '@clerk/themes';
 import { useAuth } from '../context/AuthContext';
 import { Loader2, KeyRound } from 'lucide-react';
 
@@ -64,10 +65,31 @@ export default function Login() {
               fallbackRedirectUrl="/"
               forceRedirectUrl="/"
               appearance={{
+                baseTheme: dark,
+                variables: {
+                  colorPrimary: '#F62440',
+                  colorBackground: '#161622',
+                  colorSurface: '#161622',
+                  colorText: '#ffffff',
+                  colorTextSecondary: '#9ca3af',
+                  colorInputBackground: '#0d0d14',
+                  colorInputText: '#ffffff',
+                  borderRadius: '1rem',
+                },
                 elements: {
-                  card: 'glass-card border border-white/10 shadow-2xl rounded-2xl',
-                  headerTitle: 'font-heading font-bold',
-                  formButtonPrimary: 'bg-quest-primary hover:bg-quest-primary/90 text-white font-bold',
+                  card: 'bg-[#161622]/95 border border-white/10 shadow-2xl rounded-2xl backdrop-blur-xl',
+                  headerTitle: 'font-heading font-bold text-white text-xl',
+                  headerSubtitle: 'text-gray-400 text-sm',
+                  socialButtonsBlockButton: 'bg-[#0d0d14] border border-white/10 hover:bg-white/10 text-white transition-all',
+                  socialButtonsBlockButtonText: 'text-white font-medium',
+                  formButtonPrimary: 'bg-quest-primary hover:bg-quest-primary/90 text-white font-bold py-3 shadow-[0_0_15px_rgba(246,36,64,0.4)] transition-all',
+                  formFieldLabel: 'text-gray-300 font-medium text-sm',
+                  formFieldInput: 'bg-[#0d0d14] border border-white/10 text-white focus:border-quest-primary rounded-xl',
+                  footer: 'bg-[#161622]/95 border-t border-white/10 rounded-b-2xl',
+                  footerActionText: 'text-gray-400',
+                  footerActionLink: 'text-quest-primary hover:text-quest-primary/80 font-medium',
+                  dividerLine: 'bg-white/10',
+                  dividerText: 'text-gray-400 text-xs uppercase tracking-wider',
                 }
               }}
             />

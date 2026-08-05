@@ -65,14 +65,14 @@ export default function Leaderboard() {
       {/* Header & Title */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-heading font-bold mb-2 tracking-tight">Decayed Power Leagues</h1>
+          <h1 className="text-4xl font-heading font-bold mb-2 tracking-tight text-gray-900 dark:text-white">Decayed Power Leagues</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Weekly-decayed power scores + Fenwick $O(\log N)$ dynamic percentile ranks.
+            Weekly-decayed power scores and dynamic percentile ranks.
           </p>
         </div>
       </div>
 
-      {/* Personal Hero Rank Card (Option B + D Integration) */}
+      {/* Personal Hero Rank Card */}
       {myRank && (
         <div className="glass-card p-6 border-l-4 border-l-quest-primary relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
@@ -82,20 +82,20 @@ export default function Leaderboard() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-heading font-bold text-xl">{myRank.username}</span>
+                  <span className="font-heading font-bold text-xl text-gray-900 dark:text-white">{myRank.username}</span>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${leagueStyle.badge}`}>
                     {leagueStyle.icon} {myRank.league} League
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Rank <span className="font-bold text-quest-primary">#{myRank.rank}</span> · Top <span className="font-bold text-quest-gold">{myRank.percentile}%</span> Percentile
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                  Rank <span className="font-bold text-quest-primary">#{myRank.rank}</span> · Top <span className="font-bold text-yellow-700 dark:text-quest-gold">{myRank.percentile}%</span> Percentile
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-6 bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10">
+            <div className="flex items-center gap-6 bg-[#FFFAF3] dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10">
               <div className="text-center px-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Power Score</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 uppercase font-bold">Power Score</div>
                 <div className="text-xl font-heading font-bold text-amber-700 dark:text-quest-gold flex items-center justify-center gap-1">
                   <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
                   {myRank.power_score?.toLocaleString()}
@@ -103,7 +103,7 @@ export default function Leaderboard() {
               </div>
               <div className="h-8 w-px bg-gray-300 dark:bg-white/10"></div>
               <div className="text-center px-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total XP</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 uppercase font-bold">Total XP</div>
                 <div className="text-xl font-heading font-bold text-quest-primary">
                   {myRank.total_xp?.toLocaleString()}
                 </div>
@@ -113,24 +113,19 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex flex-wrap border-b border-gray-200 dark:border-white/10 gap-2 mb-6">
-        {['Global', 'Diamond', 'Gold', 'Silver', 'Bronze', 'Friends'].map(t => (
+      {/* Combined Tabs: Global & Friends */}
+      <div className="flex border-b border-gray-200 dark:border-white/10 gap-4 mb-6">
+        {['Global', 'Friends'].map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-5 py-2.5 font-medium transition-colors relative text-sm rounded-t-lg ${
+            className={`px-6 py-3 font-bold transition-all relative text-base cursor-pointer rounded-t-xl ${
               tab === t 
-                ? 'text-quest-primary font-bold bg-white/5' 
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                ? 'text-quest-primary border-b-2 border-quest-primary bg-quest-primary/10' 
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/5'
             }`}
           >
-            {t === 'Diamond' && '💎 '}
-            {t === 'Gold' && '🥇 '}
-            {t === 'Silver' && '🥈 '}
-            {t === 'Bronze' && '🥉 '}
-            {t}
-            {tab === t && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-quest-primary shadow-[0_0_8px_rgba(246,36,64,0.8)]"></div>}
+            {t === 'Global' ? '🌐 Global Leaderboard' : '👥 Friends & Guild'}
           </button>
         ))}
       </div>
@@ -138,15 +133,15 @@ export default function Leaderboard() {
       {/* Leaderboard Table */}
       <div className="glass-card overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center gap-3 py-20 text-gray-400">
+          <div className="flex items-center justify-center gap-3 py-20 text-gray-600 dark:text-gray-400">
             <Loader2 className="w-6 h-6 animate-spin text-quest-primary" />
-            <span className="font-medium">Computing Fenwick $O(\log N)$ ranks…</span>
+            <span className="font-medium">Loading rankings…</span>
           </div>
         ) : error ? (
-          <div className="text-center py-20 text-red-400 text-sm font-medium">{error}</div>
+          <div className="text-center py-20 text-red-500 dark:text-red-400 text-sm font-semibold">{error}</div>
         ) : entries.length === 0 ? (
-          <div className="text-center py-20 text-gray-500 text-sm">
-            No players found in this league tier. Complete workouts to rank up!
+          <div className="text-center py-20 text-gray-600 dark:text-gray-400 text-sm font-medium">
+            No players found in this view. Log workouts to rank up!
           </div>
         ) : (
           <div className="overflow-x-auto">

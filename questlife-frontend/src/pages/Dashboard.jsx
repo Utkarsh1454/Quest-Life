@@ -38,7 +38,7 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-4xl font-heading font-bold mb-2 tracking-tight">Welcome back, {user.name}</h1>
-          <p className="text-gray-400">Class: <span className="text-quest-gold font-semibold">{user.class}</span> · Level Up. Live Better.</p>
+          <p className="text-gray-600 dark:text-gray-400">Class: <span className="text-quest-gold font-semibold">{user.class}</span> · Level Up. Live Better.</p>
         </div>
         
         <div className="glass-card p-4 flex items-center gap-6">
@@ -50,7 +50,7 @@ export default function Dashboard() {
           <div className="flex-1 min-w-[200px]">
             <div className="flex justify-between mb-2">
               <span className="font-heading font-semibold text-quest-primary">Level {user.level}</span>
-              <span className="text-sm text-gray-400">{user.xp} / {user.nextLevelXp} XP</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{user.xp} / {user.nextLevelXp} XP</span>
             </div>
             <div className="h-3 bg-[#FFE5BF]/40 dark:bg-quest-dark rounded-full overflow-hidden border border-[#FFE5BF]/60 dark:border-white/10">
               <div 

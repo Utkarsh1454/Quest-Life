@@ -355,23 +355,79 @@ export const UserProvider = ({ children }) => {
   }, [showToast]);
 
   const claimQuest = useCallback(async (questId) => {
+    const targetQuest = (quests || []).find(q => q.id === questId);
+    const rewardXp = targetQuest?.xp || 10;
+
     if (!authUser) {
-      showToast('Log in to claim quests.', 'info');
+      addXP(rewardXp, 'Quest claimed');
+      setQuests(prev => prev.map(q => q.id === questId ? { ...q, status: 'claimed', progress: 100 } : q));
       return;
     }
 
     try {
       const result = await apiClient(`/quests/${questId}/claim`, { method: 'POST' });
-      applyXpResult(result, 'Quest claimed!');
+      applyXpResult(result, 'Quest claimed');
       setQuests(prev => prev.map(q => q.id === questId ? { ...q, status: 'claimed', progress: 100 } : q));
     } catch (err) {
       console.warn('Failed to claim quest via backend API, claiming locally:', err);
-      addXP(50, 'Quest claimed');
+      addXP(rewardXp, 'Quest claimed');
       setQuests(prev => prev.map(q => q.id === questId ? { ...q, status: 'claimed', progress: 100 } : q));
     }
-  }, [authUser, applyXpResult, addXP, showToast]);
+  }, [authUser, quests, applyXpResult, addXP]);
+
+  const fetchUserQuests = useCallback(async () => {
+    if (!authUser) return;
+    const questKey = `questlife_quests_${authUser.id}`;
+    try {
+      const [dailyData, weeklyData] = await Promise.all([
+        apiClient('/quests/daily'),
+        apiClient('/quests/weekly')
+      ]);
+      const allApiQuests = [...(dailyData || []), ...(weeklyData || [])];
+      if (allApiQuests.length > 0) {
+        const mapped = allApiQuests.map(uq => ({
+          id: uq.id,
+          quest_id: uq.quest.id,
+          title: uq.quest.title,
+          description: uq.quest.description,
+          xp: uq.quest.xp_reward,
+          type: uq.quest.quest_type,
+          progress: uq.status === 'claimed' ? 100 : Math.round((uq.progress / (uq.quest.target_value || 100)) * 100),
+          target: 100,
+          status: uq.status,
+          icon: uq.quest.stat_affinity === 'speed' ? 'run' : uq.quest.stat_affinity === 'strength' ? 'dumbbell' : uq.quest.stat_affinity === 'recovery' ? 'water' : uq.quest.stat_affinity === 'discipline' ? 'brain' : uq.quest.quest_type === 'boss' ? 'sword' : uq.quest.quest_type === 'weekly' ? 'calendar' : 'target'
+        }));
+        setQuests(mapped);
+        localStorage.setItem(questKey, JSON.stringify(mapped));
+      }
+    } catch (err) {
+      console.warn('Failed to fetch quests from backend:', err);
+    }
+  }, [authUser]);
 
   const logWorkout = useCallback(async (workoutName = 'Workout', workoutDetails = {}) => {
+    // Advance matching quest progress
+    setQuests(prev => prev.map(q => {
+      if (q.status === 'claimed') return q;
+      if (q.icon === 'dumbbell' || q.icon === 'run' || q.type === 'daily' || q.title.toLowerCase().includes('workout') || q.title.toLowerCase().includes('run')) {
+        const newProgress = Math.min(100, (q.progress || 0) + 50);
+        return {
+          ...q,
+          progress: newProgress,
+          status: newProgress >= 100 ? 'completed' : 'available'
+        };
+      }
+      if (q.type === 'weekly' || q.type === 'boss') {
+        const newProgress = Math.min(100, (q.progress || 0) + 25);
+        return {
+          ...q,
+          progress: newProgress,
+          status: newProgress >= 100 ? 'completed' : 'available'
+        };
+      }
+      return q;
+    }));
+
     if (authUser) {
       try {
         const payload = {
@@ -393,12 +449,14 @@ export const UserProvider = ({ children }) => {
         fetchActivityHistory();
       } catch (err) {
         console.warn('Failed to persist logged workout to backend:', err);
-        logLocalActivity('workout', 100, { workoutName });
+        logLocalActivity('workout', 35, { workoutName });
+        addXP(35, `Completed ${workoutName}`);
       }
     } else {
-      logLocalActivity('workout', 100, { workoutName });
+      logLocalActivity('workout', 35, { workoutName });
+      addXP(35, `Completed ${workoutName}`);
     }
-  }, [authUser, applyXpResult, fetchActivityHistory, logLocalActivity]);
+  }, [authUser, applyXpResult, fetchActivityHistory, logLocalActivity, addXP]);
 
   const logMeal = useCallback(async (mealName = 'Meal', macros = null) => {
     const newMeal = {
@@ -417,6 +475,20 @@ export const UserProvider = ({ children }) => {
       localStorage.setItem('questlife_today_meals', JSON.stringify(updated));
       return updated;
     });
+
+    // Advance nutrition & daily quest progress
+    setQuests(prev => prev.map(q => {
+      if (q.status === 'claimed') return q;
+      if (q.icon === 'water' || q.icon === 'brain' || q.title.toLowerCase().includes('hydration') || q.title.toLowerCase().includes('meal') || q.title.toLowerCase().includes('meditation')) {
+        const newProgress = Math.min(100, (q.progress || 0) + 50);
+        return {
+          ...q,
+          progress: newProgress,
+          status: newProgress >= 100 ? 'completed' : 'available'
+        };
+      }
+      return q;
+    }));
 
     if (authUser) {
       try {
@@ -440,12 +512,14 @@ export const UserProvider = ({ children }) => {
         fetchActivityHistory();
       } catch (err) {
         console.warn('Failed to persist logged meal to backend database:', err);
-        logLocalActivity('meal', 50, { mealName, ...macros });
+        logLocalActivity('meal', 10, { mealName, ...macros });
+        addXP(10, `Logged ${mealName}`);
       }
     } else {
-      logLocalActivity('meal', 50, { mealName, ...macros });
+      logLocalActivity('meal', 10, { mealName, ...macros });
+      addXP(10, `Logged ${mealName}`);
     }
-  }, [authUser, applyXpResult, fetchActivityHistory, logLocalActivity]);
+  }, [authUser, applyXpResult, fetchActivityHistory, logLocalActivity, addXP]);
 
   const deleteMeal = useCallback(async (mealId) => {
     setTodayMeals(prev => {
@@ -480,35 +554,30 @@ export const UserProvider = ({ children }) => {
     if (authUser) {
       try {
         await apiClient('/quests/refresh', { method: 'POST' });
-        const data = await apiClient('/quests/daily');
-        if (data && Array.isArray(data)) {
-          const mapped = data.map(uq => ({
-            id: uq.id,
-            quest_id: uq.quest.id,
-            title: uq.quest.title,
-            description: uq.quest.description,
-            xp: uq.quest.xp_reward,
-            type: uq.quest.quest_type,
-            progress: Math.round((uq.progress / uq.quest.target_value) * 100),
-            target: 100,
-            status: uq.status,
-            icon: uq.quest.stat_affinity === 'speed' ? 'run' : uq.quest.stat_affinity === 'strength' ? 'dumbbell' : 'target'
-          }));
-          setQuests(mapped);
-          localStorage.setItem(questKey, JSON.stringify(mapped));
-        }
+        await fetchUserQuests();
       } catch (err) {
         console.warn('Failed to refresh quests from backend, resetting local state:', err);
+        const fresh = defaultFreshQuests.map(q => ({ ...q, progress: 0, status: 'available' }));
+        setQuests(fresh);
+        localStorage.setItem(questKey, JSON.stringify(fresh));
       }
     } else {
-      const fresh = defaultFreshQuests.map(q => ({ ...q, progress: 0, status: 'available' }));
-      setQuests(fresh);
-      localStorage.setItem(questKey, JSON.stringify(fresh));
+      setQuests(prev => {
+        const currentList = prev && prev.length > 0 ? prev : defaultFreshQuests;
+        const updated = currentList.map(q => {
+          if (q.type === 'daily') {
+            return { ...q, progress: 0, status: 'available' };
+          }
+          return q;
+        });
+        localStorage.setItem(questKey, JSON.stringify(updated));
+        return updated;
+      });
     }
     
     localStorage.setItem('questlife_last_daily_reset', todayStr);
     showToast('Quests refreshed for today! ⚡', 'success');
-  }, [authUser, showToast]);
+  }, [authUser, fetchUserQuests, showToast]);
 
   const clearAccountData = useCallback(async () => {
     if (authUser) {
@@ -556,10 +625,12 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const todayStr = new Date().toISOString().split('T')[0];
     const lastReset = localStorage.getItem('questlife_last_daily_reset');
-    if (lastReset && lastReset !== todayStr) {
+    if (!lastReset || lastReset !== todayStr) {
       refreshQuests();
+    } else if (authUser) {
+      fetchUserQuests();
     }
-  }, [refreshQuests]);
+  }, [authUser, refreshQuests, fetchUserQuests]);
 
   return (
     <UserContext.Provider value={{

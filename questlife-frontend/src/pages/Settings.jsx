@@ -48,65 +48,65 @@ export default function Settings() {
   return (
     <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-400">Player Settings & Parameters</h1>
-        <p className="text-gray-400 mt-1">Customize your hero stats, quest modifiers, and training preferences.</p>
+        <h1 className="text-3xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 dark:from-gray-100 dark:via-gray-200 dark:to-gray-400">Player Settings & Parameters</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">Customize your hero stats, quest modifiers, and training preferences.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
           {/* Identity & Objectives */}
           <div className="glass-card p-6 border-t-2 border-t-quest-primary">
-             <h2 className="text-xl font-heading font-semibold flex items-center gap-2 mb-6">
+             <h2 className="text-xl font-heading font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-6">
                <User className="w-5 h-5 text-quest-primary" />
                Hero Identity & Objectives
              </h2>
              
              <div className="space-y-4">
                <div>
-                 <label className="block text-xs font-medium text-gray-300 mb-1.5">In-Game Character Display Name</label>
+                 <label className="block text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1.5">In-Game Character Display Name</label>
                  <input 
                    type="text" 
                    value={displayName}
                    onChange={(e) => setDisplayName(e.target.value)}
-                   className="input-field" 
+                   className="input-field text-gray-900 dark:text-white" 
                    placeholder={profile?.name || 'Hero Name'}
                  />
                </div>
 
                <div>
-                 <label className="block text-xs font-medium text-gray-300 mb-1.5">Primary Quest Goal</label>
+                 <label className="block text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1.5">Primary Quest Goal</label>
                  <select 
                    value={goal}
                    onChange={(e) => setGoal(e.target.value)}
-                   className="input-field appearance-none bg-[#FFFAF3] dark:bg-quest-darkest"
+                   className="input-field appearance-none bg-[#FFFAF3] dark:bg-quest-darkest text-gray-900 dark:text-white"
                  >
-                   <option>Build Muscle (Strength Path)</option>
-                   <option>Lose Fat (Agility Path)</option>
-                   <option>Maintain & Recover (Endurance Path)</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Build Muscle (Strength Path)</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Lose Fat (Agility Path)</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Maintain & Recover (Endurance Path)</option>
                  </select>
                </div>
                
                <div className="grid grid-cols-2 gap-4">
                  <div>
-                   <label className="block text-xs font-medium text-gray-300 mb-1.5">Training Frequency</label>
+                   <label className="block text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1.5">Training Frequency</label>
                    <select 
                      value={trainingDays}
                      onChange={(e) => setTrainingDays(Number(e.target.value))}
-                     className="input-field appearance-none bg-[#FFFAF3] dark:bg-quest-darkest"
+                     className="input-field appearance-none bg-[#FFFAF3] dark:bg-quest-darkest text-gray-900 dark:text-white"
                    >
-                     {[1,2,3,4,5,6,7].map(d => <option key={d} value={d}>{d} Days / Week</option>)}
+                     {[1,2,3,4,5,6,7].map(d => <option key={d} value={d} className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">{d} Days / Week</option>)}
                    </select>
                  </div>
                  <div>
-                   <label className="block text-xs font-medium text-gray-300 mb-1.5">Experience Tier</label>
+                   <label className="block text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1.5">Experience Tier</label>
                    <select 
                      value={experienceLevel}
                      onChange={(e) => setExperienceLevel(e.target.value)}
-                     className="input-field appearance-none bg-[#FFFAF3] dark:bg-quest-darkest"
+                     className="input-field appearance-none bg-[#FFFAF3] dark:bg-quest-darkest text-gray-900 dark:text-white"
                    >
-                     <option value="Novice">Novice</option>
-                     <option value="Apprentice">Apprentice</option>
-                     <option value="Master">Master</option>
+                     <option value="Novice" className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Novice</option>
+                     <option value="Apprentice" className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Apprentice</option>
+                     <option value="Master" className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Master</option>
                    </select>
                  </div>
                </div>
@@ -115,35 +115,35 @@ export default function Settings() {
 
           {/* Nutrition Preferences */}
           <div className="glass-card p-6">
-             <h2 className="text-xl font-heading font-semibold flex items-center gap-2 mb-6">
-               <Shield className="w-5 h-5 text-blue-400" />
+             <h2 className="text-xl font-heading font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-6">
+               <Shield className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                Nutrition & Dietary Modifiers
              </h2>
              
              <div className="space-y-4">
                <div>
-                 <label className="block text-xs font-medium text-gray-300 mb-1.5">Diet Type</label>
+                 <label className="block text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1.5">Diet Type</label>
                  <select 
                    value={dietType}
                    onChange={(e) => setDietType(e.target.value)}
-                   className="input-field appearance-none bg-[#FFFAF3] dark:bg-quest-darkest"
+                   className="input-field appearance-none bg-[#FFFAF3] dark:bg-quest-darkest text-gray-900 dark:text-white"
                  >
-                   <option>Standard Omnivore</option>
-                   <option>High Protein Macro Focus</option>
-                   <option>Vegetarian</option>
-                   <option>Vegan</option>
-                   <option>Keto</option>
-                   <option>Paleo</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Standard Omnivore</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">High Protein Macro Focus</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Vegetarian</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Vegan</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Keto</option>
+                   <option className="bg-white dark:bg-quest-darkest text-gray-900 dark:text-white">Paleo</option>
                  </select>
                </div>
 
                <div>
-                 <label className="block text-xs font-medium text-gray-300 mb-1.5">Allergies & Intolerances</label>
+                 <label className="block text-xs font-semibold text-gray-800 dark:text-gray-200 mb-1.5">Allergies & Intolerances</label>
                  <input 
                    type="text" 
                    value={allergies}
                    onChange={(e) => setAllergies(e.target.value)}
-                   className="input-field" 
+                   className="input-field text-gray-900 dark:text-white" 
                    placeholder="e.g. Peanuts, Shellfish, Dairy" 
                  />
                </div>
@@ -152,7 +152,7 @@ export default function Settings() {
 
           {/* Integrations */}
           <div className="glass-card p-6 relative overflow-hidden">
-            <h2 className="text-xl font-heading font-semibold flex items-center gap-2 mb-4">
+            <h2 className="text-xl font-heading font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
               <Sliders className="w-5 h-5 text-quest-secondary" />
               Integrations & Alerts
             </h2>
@@ -160,8 +160,8 @@ export default function Settings() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-sm">Wearables Sync</div>
-                  <div className="text-xs text-gray-400">Google Fit / Apple Health</div>
+                  <div className="font-semibold text-sm text-gray-900 dark:text-white">Wearables Sync</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">Google Fit / Apple Health</div>
                 </div>
                 <button 
                   onClick={() => setShowWearablesModal(true)}
@@ -171,10 +171,10 @@ export default function Settings() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-white/5">
                 <div>
-                  <div className="font-medium text-sm">Push Notifications</div>
-                  <div className="text-xs text-gray-400">Quest updates & reminders</div>
+                  <div className="font-semibold text-sm text-gray-900 dark:text-white">Push Notifications</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">Quest updates & reminders</div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -183,7 +183,7 @@ export default function Settings() {
                     onChange={(e) => setNotifications(e.target.checked)}
                     className="sr-only peer" 
                   />
-                  <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-quest-primary"></div>
+                  <div className="w-11 h-6 bg-gray-300 dark:bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-quest-primary"></div>
                 </label>
               </div>
             </div>
@@ -191,11 +191,11 @@ export default function Settings() {
 
           {/* Theme Mode Option */}
           <div className="glass-card p-6">
-            <h2 className="text-xl font-heading font-semibold flex items-center gap-2 mb-4">
-              {themeMode === 'dark' ? <Moon className="w-5 h-5 text-purple-400" /> : <Sun className="w-5 h-5 text-amber-400" />}
+            <h2 className="text-xl font-heading font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+              {themeMode === 'dark' ? <Moon className="w-5 h-5 text-purple-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
               Display & Theme
             </h2>
-            <p className="text-xs text-gray-400 mb-6">Choose between signature dark mode or clean warm light mode.</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-6">Choose between signature dark mode or clean warm light mode.</p>
             
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -203,7 +203,7 @@ export default function Settings() {
                 className={`py-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   themeMode === 'dark'
                     ? 'bg-quest-primary text-white border-transparent shadow-lg shadow-quest-primary/30'
-                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                    : 'bg-white/5 text-gray-700 dark:text-gray-400 border-gray-200 dark:border-white/10 hover:bg-white/10'
                 }`}
               >
                 <Moon className="w-4 h-4" /> Dark Mode
@@ -213,7 +213,7 @@ export default function Settings() {
                 className={`py-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   themeMode === 'light'
                     ? 'bg-quest-primary text-white border-transparent shadow-lg shadow-quest-primary/30'
-                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                    : 'bg-white/5 text-gray-700 dark:text-gray-400 border-gray-200 dark:border-white/10 hover:bg-white/10'
                 }`}
               >
                 <Sun className="w-4 h-4" /> Light Mode
@@ -223,11 +223,11 @@ export default function Settings() {
 
           {/* Danger Zone: Clear Account Processes */}
           <div className="glass-card p-6 border-t-4 border-t-red-500/50 bg-red-500/5">
-            <h2 className="text-xl font-heading font-semibold flex items-center gap-2 mb-2 text-red-400">
+            <h2 className="text-xl font-heading font-semibold flex items-center gap-2 mb-2 text-red-600 dark:text-red-400">
               <Trash2 className="w-5 h-5" />
               Account Reset & Clear Process
             </h2>
-            <p className="text-xs text-gray-400 mb-4">Clear all account activity history, quest progress, logged workouts/meals, and reset stats back to Level 1 initial state.</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">Clear all account activity history, quest progress, logged workouts/meals, and reset stats back to Level 1 initial state.</p>
             <button
               type="button"
               onClick={() => {
@@ -235,7 +235,7 @@ export default function Settings() {
                   clearAccountData();
                 }
               }}
-              className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-700 dark:text-red-300 border border-red-500/40 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <Trash2 className="w-4 h-4" /> Clear All Account Process & Reset Data
             </button>
