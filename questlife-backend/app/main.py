@@ -31,12 +31,11 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
-# CORS configuration with explicit origin allowlist and localhost regex fallback
+# CORS configuration allowing local, Vercel, and cloud origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
