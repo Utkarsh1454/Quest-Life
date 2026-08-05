@@ -19,7 +19,7 @@
 
 | 🔐 Modern Dark Theme Auth | 🚪 Authentication Gateway |
 | :---: | :---: |
-| ![Clerk Auth Modal](docs/screenshots/Screenshot 2026-08-05 153330.png) | ![Login Page](docs/screenshots/login.png) |
+| ![Clerk Auth Modal](<docs/screenshots/Screenshot 2026-08-05 153330.png>) | ![Login Page](docs/screenshots/login.png) |
 
 ---
 
