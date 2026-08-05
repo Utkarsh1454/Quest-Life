@@ -556,28 +556,33 @@ export const UserProvider = ({ children }) => {
         await apiClient('/quests/refresh', { method: 'POST' });
         await fetchUserQuests();
       } catch (err) {
-        console.warn('Failed to refresh quests from backend, resetting local state:', err);
-        const fresh = defaultFreshQuests.map(q => ({ ...q, progress: 0, status: 'available' }));
-        setQuests(fresh);
-        localStorage.setItem(questKey, JSON.stringify(fresh));
+        console.warn('Failed to re-sync quests from backend:', err);
       }
     } else {
       setQuests(prev => {
         const currentList = prev && prev.length > 0 ? prev : defaultFreshQuests;
-        const updated = currentList.map(q => {
-          if (q.type === 'daily') {
-            return { ...q, progress: 0, status: 'available' };
-          }
-          return q;
-        });
-        localStorage.setItem(questKey, JSON.stringify(updated));
-        return updated;
+        localStorage.setItem(questKey, JSON.stringify(currentList));
+        return currentList;
       });
     }
     
     localStorage.setItem('questlife_last_daily_reset', todayStr);
-    showToast('Quests refreshed for today! ⚡', 'success');
+    showToast('Quests synchronized! ⚡', 'success');
   }, [authUser, fetchUserQuests, showToast]);
+
+  const resetQuestProgress = useCallback(() => {
+    setQuests(prev => {
+      const reset = prev.map(q => ({
+        ...q,
+        progress: 0,
+        status: 'available'
+      }));
+      const questKey = authUser?.id ? `questlife_quests_${authUser.id}` : 'questlife_quests';
+      localStorage.setItem(questKey, JSON.stringify(reset));
+      return reset;
+    });
+    showToast('Quest progress reset to 0%', 'info');
+  }, [authUser, showToast]);
 
   const clearAccountData = useCallback(async () => {
     if (authUser) {
@@ -650,6 +655,7 @@ export const UserProvider = ({ children }) => {
       deleteMeal,
       updatePreferences,
       refreshQuests,
+      resetQuestProgress,
       clearAccountData,
       todayMeals,
       fetchTodayMeals,

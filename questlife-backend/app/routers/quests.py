@@ -169,37 +169,36 @@ async def refresh_quests_for_user(
     await _ensure_seed_quests(db)
     today = get_today_utc()
     
-    old_res = await db.execute(
+    existing_res = await db.execute(
         select(UserQuest).join(Quest).where(
             UserQuest.user_id == current_user.id,
             Quest.quest_type == "daily"
         )
     )
-    for old_uq in old_res.scalars().all():
-        await db.delete(old_uq)
-    await db.commit()
+    existing_daily = existing_res.scalars().all()
     
-    quests_result = await db.execute(
-        select(Quest).where(Quest.quest_type == "daily", Quest.is_active == True)
-    )
-    all_daily_quests = quests_result.scalars().all()
-    
-    if all_daily_quests:
-        num_to_assign = min(5, len(all_daily_quests))
-        selected_quests = random.sample(all_daily_quests, num_to_assign)
+    if not existing_daily:
+        quests_result = await db.execute(
+            select(Quest).where(Quest.quest_type == "daily", Quest.is_active == True)
+        )
+        all_daily_quests = quests_result.scalars().all()
         
-        for q in selected_quests:
-            uq = UserQuest(
-                user_id=current_user.id,
-                quest_id=q.id,
-                assigned_date=today,
-                progress=0.0,
-                status="active"
-            )
-            db.add(uq)
-        await db.commit()
+        if all_daily_quests:
+            num_to_assign = min(5, len(all_daily_quests))
+            selected_quests = random.sample(all_daily_quests, num_to_assign)
+            
+            for q in selected_quests:
+                uq = UserQuest(
+                    user_id=current_user.id,
+                    quest_id=q.id,
+                    assigned_date=today,
+                    progress=0.0,
+                    status="active"
+                )
+                db.add(uq)
+            await db.commit()
 
-    return {"status": "success", "message": "Daily quests refreshed for today."}
+    return {"status": "success", "message": "Daily quests synchronized."}
 
 @router.post("/{quest_id}/claim", response_model=QuestClaimResponse)
 async def claim_quest(

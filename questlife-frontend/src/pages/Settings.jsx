@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import WearablesModal from '../components/WearablesModal';
 
 export default function Settings() {
-  const { profile, updatePreferences, clearAccountData, showToast } = useUser();
+  const { profile, updatePreferences, resetQuestProgress, clearAccountData, showToast } = useUser();
   const { theme: themeMode, setTheme } = useTheme();
 
   const handleThemeChange = (mode) => {
@@ -221,24 +221,41 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Danger Zone: Clear Account Processes */}
-          <div className="glass-card p-6 border-t-4 border-t-red-500/50 bg-red-500/5">
-            <h2 className="text-xl font-heading font-semibold flex items-center gap-2 mb-2 text-red-600 dark:text-red-400">
-              <Trash2 className="w-5 h-5" />
-              Account Reset & Clear Process
-            </h2>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">Clear all account activity history, quest progress, logged workouts/meals, and reset stats back to Level 1 initial state.</p>
-            <button
-              type="button"
-              onClick={() => {
-                if (window.confirm('Are you sure you want to clear all account processes and reset data? This action cannot be undone.')) {
-                  clearAccountData();
-                }
-              }}
-              className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-700 dark:text-red-300 border border-red-500/40 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4" /> Clear All Account Process & Reset Data
-            </button>
+          {/* Danger Zone: Clear Account Processes & Progress Reset */}
+          <div className="glass-card p-6 border-t-4 border-t-red-500/50 bg-red-500/5 space-y-4">
+            <div>
+              <h2 className="text-xl font-heading font-semibold flex items-center gap-2 mb-2 text-red-600 dark:text-red-400">
+                <Trash2 className="w-5 h-5" />
+                Account Reset & Progress Controls
+              </h2>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Reset active quest progress or perform a full account data reset. Refreshing quests from main pages will never wipe your progress.</p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to reset active daily & weekly quest progress to 0%? Your character level and stats will remain intact.')) {
+                    resetQuestProgress();
+                  }
+                }}
+                className="py-3 px-4 bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-300 border border-amber-500/40 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Sliders className="w-4 h-4" /> Reset Active Quest Progress
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear all account processes and reset data? This action cannot be undone.')) {
+                    clearAccountData();
+                  }
+                }}
+                className="py-3 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-700 dark:text-red-300 border border-red-500/40 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" /> Clear All Account & Process Data
+              </button>
+            </div>
           </div>
 
           <button 
