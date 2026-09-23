@@ -56,7 +56,9 @@ async def get_current_user(
             select(User).where(
                 or_(
                     func.lower(User.email) == str(email).lower(),
-                    func.lower(User.username) == str(username).lower()
+                    func.lower(User.username) == str(username).lower(),
+                    func.lower(User.email) == f"{str(sub).lower()}@clerk.user",
+                    func.lower(User.username) == f"hero_{str(sub)[-6:].lower()}"
                 )
             )
         )

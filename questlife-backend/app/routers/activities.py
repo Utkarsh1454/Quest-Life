@@ -11,6 +11,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User, UserStats, UserPreferences, UserStreak
 from app.models.activity import Activity, WorkoutLog, MealLog
+from app.models.quest import UserQuest, Quest
 from app.schemas.activity import (
     LogWorkoutRequest,
     LogMealRequest,
@@ -215,6 +216,36 @@ async def log_activity(
         user.stats.discipline += allocated['discipline']
         user.stats.consistency += allocated['consistency']
         user.stats.recovery += allocated['recovery']
+
+    # 3. Update matching active user quest progress
+    active_quests_res = await db.execute(
+        select(UserQuest)
+        .options(selectinload(UserQuest.quest))
+        .where(
+            UserQuest.user_id == user.id,
+            UserQuest.status == "active"
+        )
+    )
+    active_quests = active_quests_res.scalars().all()
+    for uq in active_quests:
+        affinity = (uq.quest.stat_affinity or "").lower()
+        qtype = uq.quest.quest_type
+        should_advance = False
+        if activity_type == "workout" and (affinity in ["strength", "endurance", "speed"] or qtype in ["daily", "weekly", "boss"]):
+            should_advance = True
+        elif activity_type == "meal" and (affinity in ["discipline", "recovery", "consistency"] or qtype in ["daily"]):
+            should_advance = True
+        elif activity_type == "steps" and (affinity in ["speed", "consistency", "endurance"] or qtype in ["daily"]):
+            should_advance = True
+        elif activity_type == "sleep" and (affinity in ["recovery", "discipline"] or qtype in ["daily"]):
+            should_advance = True
+
+        if should_advance:
+            advance_val = 50.0 if qtype == "daily" else 25.0
+            uq.progress = min(uq.quest.target_value, uq.progress + advance_val)
+            if uq.progress >= uq.quest.target_value:
+                uq.status = "completed"
+                uq.completed_at = datetime.now(timezone.utc)
 
     await db.commit()
     await db.refresh(user.stats)

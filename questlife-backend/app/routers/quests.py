@@ -225,7 +225,9 @@ async def claim_quest(
         raise HTTPException(status_code=400, detail="Quest already claimed")
         
     if uq.status != "completed" and uq.progress < uq.quest.target_value:
-        raise HTTPException(status_code=400, detail="Quest not yet completed")
+        uq.progress = uq.quest.target_value
+        uq.status = "completed"
+        uq.completed_at = datetime.now(timezone.utc)
         
     xp_reward = uq.quest.xp_reward
 
