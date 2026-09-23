@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000"
     CLERK_SECRET_KEY: str = ""
     CLERK_ISSUER: str = ""
+    CLERK_JWKS_URL: str = ""
+    CLERK_PEM_PUBLIC_KEY: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

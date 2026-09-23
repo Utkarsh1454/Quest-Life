@@ -88,6 +88,48 @@ try:
         except PyJWTError as e:
             raise ValueError(f"Invalid token: {e}")
 
+    def decode_clerk_token(token: str) -> dict:
+        """
+        Securely verifies and decodes a Clerk JWT token using RS256 signature verification.
+        Requires CLERK_PEM_PUBLIC_KEY, CLERK_JWKS_URL, or CLERK_ISSUER to be configured.
+        Unverified token fallbacks are strictly prohibited.
+        """
+        if settings.CLERK_PEM_PUBLIC_KEY:
+            try:
+                payload = jwt.decode(
+                    token,
+                    settings.CLERK_PEM_PUBLIC_KEY,
+                    algorithms=["RS256"],
+                    issuer=settings.CLERK_ISSUER or None,
+                    options={"verify_aud": False},
+                )
+                return payload
+            except PyJWTError as e:
+                raise ValueError(f"Invalid Clerk token: {e}")
+
+        jwks_url = settings.CLERK_JWKS_URL
+        if not jwks_url and settings.CLERK_ISSUER:
+            jwks_url = f"{settings.CLERK_ISSUER.rstrip('/')}/.well-known/jwks.json"
+
+        if jwks_url:
+            try:
+                jwks_client = jwt.PyJWKClient(jwks_url, cache_keys=True)
+                signing_key = jwks_client.get_signing_key_from_jwt(token)
+                payload = jwt.decode(
+                    token,
+                    signing_key.key,
+                    algorithms=["RS256"],
+                    issuer=settings.CLERK_ISSUER or None,
+                    options={"verify_aud": False},
+                )
+                return payload
+            except PyJWTError as e:
+                raise ValueError(f"Invalid Clerk token: {e}")
+            except Exception as e:
+                raise ValueError(f"Failed to verify Clerk token via JWKS: {e}")
+
+        raise ValueError("Clerk verification disabled: missing CLERK_PEM_PUBLIC_KEY, CLERK_JWKS_URL, or CLERK_ISSUER.")
+
 except ImportError as err:
     raise RuntimeError(
         "Critical Security Error: 'PyJWT' package is required for secure JWT token signing. "

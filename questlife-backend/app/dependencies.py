@@ -8,7 +8,7 @@ import jwt
 
 from app.database import get_db
 from app.models.user import User, UserStats, UserPreferences, UserStreak
-from app.utils.security import decode_token, hash_password
+from app.utils.security import decode_token, decode_clerk_token, hash_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -41,9 +41,9 @@ async def get_current_user(
     except Exception:
         pass
 
-    # 2. Try Clerk JWT token decoding (supports Clerk JWT claims)
+    # 2. Try Clerk JWT token decoding (requires valid signature)
     try:
-        clerk_payload = jwt.decode(token, options={"verify_signature": False})
+        clerk_payload = decode_clerk_token(token)
         sub = clerk_payload.get("sub")
         if not sub:
             raise credentials_exception
