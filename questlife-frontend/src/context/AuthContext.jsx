@@ -197,7 +197,7 @@ export const AuthProvider = ({ children }) => {
       isClerkSignedIn,
       clerkUser
     }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

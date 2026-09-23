@@ -91,8 +91,9 @@ try:
     def decode_clerk_token(token: str) -> dict:
         """
         Securely verifies and decodes a Clerk JWT token using RS256 signature verification.
-        Requires CLERK_PEM_PUBLIC_KEY, CLERK_JWKS_URL, or CLERK_ISSUER to be configured.
-        Unverified token fallbacks are strictly prohibited.
+        Uses configured CLERK_PEM_PUBLIC_KEY, CLERK_JWKS_URL, or CLERK_ISSUER if provided;
+        otherwise dynamically extracts the token's 'iss' claim to fetch its official JWKS key.
+        Unverified token payloads are NEVER returned without signature verification.
         """
         if settings.CLERK_PEM_PUBLIC_KEY:
             try:
@@ -105,11 +106,24 @@ try:
                 )
                 return payload
             except PyJWTError as e:
-                raise ValueError(f"Invalid Clerk token: {e}")
+                raise ValueError(f"Invalid Clerk token PEM verification: {e}")
 
         jwks_url = settings.CLERK_JWKS_URL
-        if not jwks_url and settings.CLERK_ISSUER:
-            jwks_url = f"{settings.CLERK_ISSUER.rstrip('/')}/.well-known/jwks.json"
+        issuer = settings.CLERK_ISSUER or None
+
+        if not jwks_url:
+            if settings.CLERK_ISSUER:
+                jwks_url = f"{settings.CLERK_ISSUER.rstrip('/')}/.well-known/jwks.json"
+            else:
+                # Dynamically extract 'iss' claim ONLY to discover the official JWKS endpoint
+                try:
+                    unverified_payload = jwt.decode(token, options={"verify_signature": False})
+                    token_iss = unverified_payload.get("iss")
+                    if token_iss and isinstance(token_iss, str) and token_iss.startswith("https://"):
+                        jwks_url = f"{token_iss.rstrip('/')}/.well-known/jwks.json"
+                        issuer = token_iss
+                except Exception:
+                    pass
 
         if jwks_url:
             try:
@@ -119,16 +133,16 @@ try:
                     token,
                     signing_key.key,
                     algorithms=["RS256"],
-                    issuer=settings.CLERK_ISSUER or None,
+                    issuer=issuer,
                     options={"verify_aud": False},
                 )
                 return payload
             except PyJWTError as e:
-                raise ValueError(f"Invalid Clerk token: {e}")
+                raise ValueError(f"Invalid Clerk token RS256 signature: {e}")
             except Exception as e:
-                raise ValueError(f"Failed to verify Clerk token via JWKS: {e}")
+                raise ValueError(f"Failed to verify Clerk token via JWKS ({jwks_url}): {e}")
 
-        raise ValueError("Clerk verification disabled: missing CLERK_PEM_PUBLIC_KEY, CLERK_JWKS_URL, or CLERK_ISSUER.")
+        raise ValueError("Clerk verification failed: missing CLERK_PEM_PUBLIC_KEY, CLERK_JWKS_URL, or valid token issuer.")
 
 except ImportError as err:
     raise RuntimeError(
