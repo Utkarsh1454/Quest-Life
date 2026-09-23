@@ -92,21 +92,27 @@ export const UserProvider = ({ children }) => {
 
   const applyXpResult = useCallback((result, reason) => {
     if (!result) return;
-    const newLevel = result.new_level || 1;
-    setProfile(prev => ({
-      ...prev,
-      xp: result.new_total_xp !== undefined ? result.new_total_xp : (prev?.xp || 0),
-      level: newLevel,
-      nextLevelXp: getXpRequiredForLevel(newLevel),
-      stats: result.stats_after ? {
-        str: result.stats_after.strength ?? prev?.stats?.str ?? 10,
-        end: result.stats_after.endurance ?? prev?.stats?.end ?? 10,
-        spd: result.stats_after.speed ?? prev?.stats?.spd ?? 10,
-        dis: result.stats_after.discipline ?? prev?.stats?.dis ?? 10,
-        con: result.stats_after.consistency ?? prev?.stats?.con ?? 10,
-        rec: result.stats_after.recovery ?? prev?.stats?.rec ?? 10,
-      } : prev?.stats
-    }));
+    setProfile(prev => {
+      const currentLevel = prev?.level || 1;
+      const newLevel = Math.max(currentLevel, result.new_level || 1);
+      const currentXp = prev?.xp || 0;
+      const newXp = result.new_total_xp !== undefined ? Math.max(currentXp, result.new_total_xp) : currentXp;
+
+      return {
+        ...prev,
+        xp: newXp,
+        level: newLevel,
+        nextLevelXp: getXpRequiredForLevel(newLevel),
+        stats: result.stats_after ? {
+          str: Math.max(result.stats_after.strength ?? 10, prev?.stats?.str ?? 10),
+          end: Math.max(result.stats_after.endurance ?? 10, prev?.stats?.end ?? 10),
+          spd: Math.max(result.stats_after.speed ?? 10, prev?.stats?.spd ?? 10),
+          dis: Math.max(result.stats_after.discipline ?? 10, prev?.stats?.dis ?? 10),
+          con: Math.max(result.stats_after.consistency ?? 10, prev?.stats?.con ?? 10),
+          rec: Math.max(result.stats_after.recovery ?? 10, prev?.stats?.rec ?? 10),
+        } : prev?.stats
+      };
+    });
 
     if (result.level_up) {
       showToast(`LEVEL UP! Reached Level ${newLevel}! 🎉`, 'level-up', result.xp_earned);
@@ -221,22 +227,26 @@ export const UserProvider = ({ children }) => {
       if (savedProf) {
         const parsed = JSON.parse(savedProf);
         if (authUser.stats) {
-          parsed.level = authUser.stats.level ?? parsed.level;
-          parsed.xp = authUser.stats.total_xp ?? authUser.stats.current_xp ?? parsed.xp;
-          parsed.nextLevelXp = getXpRequiredForLevel(parsed.level);
+          const maxLevel = Math.max(parsed.level || 1, authUser.stats.level || 1);
+          const maxTotalXp = Math.max(parsed.xp || 0, authUser.stats.total_xp || 0, authUser.stats.current_xp || 0);
+          
+          parsed.level = maxLevel;
+          parsed.xp = maxTotalXp;
+          parsed.nextLevelXp = getXpRequiredForLevel(maxLevel);
+
           if (authUser.stats.strength !== undefined) {
             parsed.stats = {
-              str: authUser.stats.strength ?? parsed.stats?.str ?? 10,
-              end: authUser.stats.endurance ?? parsed.stats?.end ?? 10,
-              spd: authUser.stats.speed ?? parsed.stats?.spd ?? 10,
-              dis: authUser.stats.discipline ?? parsed.stats?.dis ?? 10,
-              con: authUser.stats.consistency ?? parsed.stats?.con ?? 10,
-              rec: authUser.stats.recovery ?? parsed.stats?.rec ?? 10,
+              str: Math.max(parsed.stats?.str || 10, authUser.stats.strength || 10),
+              end: Math.max(parsed.stats?.end || 10, authUser.stats.endurance || 10),
+              spd: Math.max(parsed.stats?.spd || 10, authUser.stats.speed || 10),
+              dis: Math.max(parsed.stats?.dis || 10, authUser.stats.discipline || 10),
+              con: Math.max(parsed.stats?.con || 10, authUser.stats.consistency || 10),
+              rec: Math.max(parsed.stats?.rec || 10, authUser.stats.recovery || 10),
             };
           }
         }
         if (authUser.streak) {
-          parsed.streak = authUser.streak.current_streak ?? parsed.streak;
+          parsed.streak = Math.max(parsed.streak || 0, authUser.streak.current_streak || 0);
         }
         setProfile(parsed);
       } else {
@@ -385,18 +395,45 @@ export const UserProvider = ({ children }) => {
       ]);
       const allApiQuests = [...(dailyData || []), ...(weeklyData || [])];
       if (allApiQuests.length > 0) {
-        const mapped = allApiQuests.map(uq => ({
-          id: uq.id,
-          quest_id: uq.quest.id,
-          title: uq.quest.title,
-          description: uq.quest.description,
-          xp: uq.quest.xp_reward,
-          type: uq.quest.quest_type,
-          progress: uq.status === 'claimed' ? 100 : Math.round((uq.progress / (uq.quest.target_value || 100)) * 100),
-          target: 100,
-          status: uq.status,
-          icon: uq.quest.stat_affinity === 'speed' ? 'run' : uq.quest.stat_affinity === 'strength' ? 'dumbbell' : uq.quest.stat_affinity === 'recovery' ? 'water' : uq.quest.stat_affinity === 'discipline' ? 'brain' : uq.quest.quest_type === 'boss' ? 'sword' : uq.quest.quest_type === 'weekly' ? 'calendar' : 'target'
-        }));
+        const savedQStr = localStorage.getItem(questKey);
+        const savedQList = savedQStr ? JSON.parse(savedQStr) : [];
+
+        const mapped = allApiQuests.map(uq => {
+          const matchingLocal = savedQList.find(lq => lq.id === uq.id || lq.quest_id === uq.quest.id || lq.title === uq.quest.title);
+          let finalStatus = uq.status;
+          let finalProgress = uq.status === 'claimed' ? 100 : Math.round((uq.progress / (uq.quest.target_value || 100)) * 100);
+
+          if (matchingLocal) {
+            if (matchingLocal.status === 'claimed') {
+              finalStatus = 'claimed';
+              finalProgress = 100;
+            } else if (matchingLocal.status === 'completed') {
+              if (finalStatus !== 'claimed') {
+                finalStatus = 'completed';
+                finalProgress = Math.max(finalProgress, matchingLocal.progress || 100);
+              }
+            } else {
+              finalProgress = Math.max(finalProgress, matchingLocal.progress || 0);
+              if (finalProgress >= 100 && finalStatus === 'active') {
+                finalStatus = 'completed';
+              }
+            }
+          }
+
+          return {
+            id: uq.id,
+            quest_id: uq.quest.id,
+            title: uq.quest.title,
+            description: uq.quest.description,
+            xp: uq.quest.xp_reward,
+            type: uq.quest.quest_type,
+            progress: finalProgress,
+            target: 100,
+            status: finalStatus,
+            icon: uq.quest.stat_affinity === 'speed' ? 'run' : uq.quest.stat_affinity === 'strength' ? 'dumbbell' : uq.quest.stat_affinity === 'recovery' ? 'water' : uq.quest.stat_affinity === 'discipline' ? 'brain' : uq.quest.quest_type === 'boss' ? 'sword' : uq.quest.quest_type === 'weekly' ? 'calendar' : 'target'
+          };
+        });
+
         setQuests(mapped);
         localStorage.setItem(questKey, JSON.stringify(mapped));
       }
