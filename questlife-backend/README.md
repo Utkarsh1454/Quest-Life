@@ -41,26 +41,21 @@ Copy the example environment file:
 ```bash
 cp .env.example .env
 ```
-Update the `.env` file with your specific PostgreSQL credentials and desired secret keys.
+Update `.env` with either:
+- **Local SQLite**: `DATABASE_URL=sqlite+aiosqlite:///./questlife.db`
+- **Vercel Postgres / Neon**: `DATABASE_URL=postgresql://user:pass@ep-xxxx-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require` (or set `POSTGRES_URL`)
 
-### 5. Database Setup
+### 5. Database Initialization & Seeding
 
-Ensure PostgreSQL is running and create the `questlife` database:
-```sql
-CREATE DATABASE questlife;
-```
-
-Run Alembic migrations to create tables (once configured):
+Run the automated database setup script to generate all 13 tables and seed default quests, badges, and demo hero:
 ```bash
-alembic upgrade head
+python init_db.py
 ```
 
 ### 6. Start the Server
 
 ```bash
-fastapi dev app/main.py
-# OR
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 ## API Documentation
@@ -75,14 +70,16 @@ Once the server is running, visit:
 questlife-backend/
 ├── app/
 │   ├── config.py         # App settings and environment variables
-│   ├── database.py       # SQLAlchemy setup and async session
-│   ├── dependencies.py   # FastAPI dependencies (auth, db)
+│   ├── database.py       # SQLAlchemy async engine (SQLite & Vercel/Neon Postgres)
+│   ├── dependencies.py   # FastAPI dependencies (auth, Clerk sub binding, db)
 │   ├── main.py           # FastAPI application entry point
-│   ├── models/           # SQLAlchemy 2.0 Declarative models
+│   ├── models/           # SQLAlchemy 2.0 Declarative models (User, Quest, Activity, Badge, Guild)
 │   ├── schemas/          # Pydantic v2 schemas for requests/responses
-│   ├── routers/          # API endpoint routes
-│   ├── utils/            # Helper functions
+│   ├── routers/          # API endpoint routes (/auth, /quests, /activities, /leaderboard)
+│   ├── services/         # Nutrition DB, exercise DB, notification services
+│   ├── utils/            # Helper functions, security, Clerk JWT, Fenwick algorithm
 │   └── engine/           # Core game engine logic (XP, stats)
+├── init_db.py            # Automated table creation and seeding script
 ├── .env                  # Environment variables (do not commit)
 ├── .env.example          # Template for environment variables
 ├── requirements.txt      # Python dependencies

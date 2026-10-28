@@ -65,16 +65,17 @@ Quest-Life/
 ├── questlife-backend/        # FastAPI Python Backend
 │   ├── app/
 │   │   ├── engine/           # RPG progression, XP curves, Fenwick tree
-│   │   ├── models/           # SQLAlchemy 2.0 async database schemas
-│   │   ├── routers/          # REST API endpoints (/quests, /activities, /leaderboard)
+│   │   ├── models/           # SQLAlchemy 2.0 async database schemas (User, Quest, Activity, Badge, Guild)
+│   │   ├── routers/          # REST API endpoints (/quests, /activities, /leaderboard, /auth)
 │   │   ├── services/         # Nutrition DB, exercise DB, notification services
-│   │   └── utils/            # Security, JWT, Fenwick algorithm
+│   │   └── utils/            # Security, Clerk JWT, Fenwick algorithm
+│   ├── init_db.py            # Automated table creation and seeding script (SQLite / Vercel Postgres)
 │   └── tests/                # 65 Pytest async test cases
 └── questlife-frontend/       # React 18 + Vite 5 Single Page App
     ├── src/
     │   ├── api/              # API client wrapper with fallback handling
     │   ├── components/       # Glassmorphism UI components & modals
-    │   ├── context/          # UserContext (Profile/Quests) & AuthContext (Clerk)
+    │   ├── context/          # UserContext (Profile/Quests), AuthContext (Clerk), ThemeContext
     │   ├── layouts/          # Responsive Dashboard layout with Sidebar & Header
     │   └── pages/            # Dashboard, Quests, Workout, Diet, Profile, Leaderboard, Settings
     └── vercel.json           # SPA rewrite configuration for Vercel deployment
@@ -82,8 +83,9 @@ Quest-Life/
 
 ### Stack Overview
 - **Frontend**: React 18, Vite 5, Tailwind CSS, Lucide Icons, Recharts, Clerk React Authentication.
-- **Backend**: Python 3.12+, FastAPI, SQLAlchemy 2.0 Async, Pydantic V2, Pytest (65 tests), SQLite / PostgreSQL.
-- **Deployment**: Vercel (Frontend Static SPA) & Render (FastAPI Web Service).
+- **Backend**: Python 3.12+, FastAPI, SQLAlchemy 2.0 Async, Pydantic V2, Pytest (65 tests).
+- **Databases**: SQLite (local development) & PostgreSQL (Vercel Postgres / Neon Serverless with asyncpg + SSL).
+- **Deployment**: Vercel (Frontend Static SPA & Postgres) & Render / Cloud Run (FastAPI Web Service).
 
 ---
 
@@ -113,6 +115,9 @@ pip install -r requirements.txt
 
 # Create environment configuration
 cp .env.example .env
+
+# Initialize database schema and seed default quests, badges, and demo hero
+python init_db.py
 
 # Run the FastAPI development server
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
@@ -145,24 +150,45 @@ npm run dev
 
 ### Frontend `.env` (`questlife-frontend/.env`)
 ```env
+# Clerk Publishable Key (From https://dashboard.clerk.com -> API Keys)
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_YOUR_CLERK_KEY
+
+# Backend API Base URL
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
 ### Backend `.env` (`questlife-backend/.env`)
+
+#### For Local SQLite Development:
 ```env
 PROJECT_NAME=Quest Life
 DEBUG=true
 DATABASE_URL=sqlite+aiosqlite:///./questlife.db
-SECRET_KEY=your-secure-secret-key
-CLERK_SECRET_KEY=sk_test_YOUR_CLERK_SECRET_KEY
+SECRET_KEY=your-secure-secret-key-min-32-chars
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
+
+#### For Vercel Postgres / Neon Serverless PostgreSQL:
+```env
+PROJECT_NAME=Quest Life
+DEBUG=true
+
+# Either DATABASE_URL or POSTGRES_URL (automatically normalized for asyncpg + SSL)
+DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-xxxx-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+POSTGRES_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-xxxx-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+
+SECRET_KEY=your-secure-secret-key-min-32-chars
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://your-vercel-domain.vercel.app
+```
+
+> [!NOTE]
+> **Authentication & Passwordless Logins**: Users signing in through Clerk (Google, GitHub, social login, or email OTP) are bound directly to their logged-in identity (`clerk_id` / `sub`). All stats, streak records, quests, and guild memberships are connected to their account without requiring passwords.
 
 ---
 
 ## 🌐 Production Deployment
 
-### ⚡ Deploying Frontend to Vercel
+### ⚡ Deploying Frontend & Database to Vercel
 1. Link your GitHub repository to Vercel.
 2. Set **Root Directory** to `questlife-frontend`.
 3. Build Settings:
@@ -171,13 +197,20 @@ CLERK_SECRET_KEY=sk_test_YOUR_CLERK_SECRET_KEY
 4. Add Environment Variables:
    - `VITE_CLERK_PUBLISHABLE_KEY`
    - `VITE_API_BASE_URL`
+5. **Vercel Postgres (Neon)**:
+   - Under the **Storage** tab, create or link a Postgres database.
+   - Run `python init_db.py` with your `POSTGRES_URL` to create all 13 tables and seed initial quests and badges.
 
-### 🐍 Deploying Backend to Render
-1. Create a new **Web Service** on Render linked to your repository.
+### 🐍 Deploying Backend to Render / Cloud
+1. Create a new **Web Service** linked to your repository.
 2. Set **Root Directory** to `questlife-backend`.
 3. Configure Commands:
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. Add Environment Variables:
+   - `DATABASE_URL` (or `POSTGRES_URL` from your Vercel/Neon database)
+   - `SECRET_KEY`
+   - `CORS_ORIGINS`
 
 ---
 
