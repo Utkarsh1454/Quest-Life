@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Quest Life"
     DEBUG: bool = True
     DATABASE_URL: str = "sqlite+aiosqlite:///./questlife.db"
+    POSTGRES_URL: str = ""
     SECRET_KEY: str = DEFAULT_SECRET_KEY
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
@@ -28,6 +29,12 @@ class Settings(BaseSettings):
     CLERK_PEM_PUBLIC_KEY: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @property
+    def effective_database_url(self) -> str:
+        if self.POSTGRES_URL and self.POSTGRES_URL.strip():
+            return self.POSTGRES_URL.strip()
+        return self.DATABASE_URL
 
     @property
     def cors_origins_list(self) -> List[str]:

@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict
 class UserResponse(BaseModel):
     """Schema for user public data."""
     id: int
+    clerk_id: str | None = None
     email: str
     username: str
     display_name: str | None

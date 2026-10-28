@@ -19,9 +19,10 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    clerk_id: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     username: Mapped[str] = mapped_column(String, unique=True, index=True)
-    hashed_password: Mapped[str] = mapped_column(String)
+    hashed_password: Mapped[str | None] = mapped_column(String, nullable=True)
     display_name: Mapped[str | None] = mapped_column(String, nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(String, nullable=True)
     character_class: Mapped[str] = mapped_column(String, default="warrior")

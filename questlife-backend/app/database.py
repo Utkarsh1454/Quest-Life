@@ -7,26 +7,53 @@ from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
 
 
-def _create_engine():
-    """Create the async engine based on DATABASE_URL.
-    
-    Supports both PostgreSQL (asyncpg) and SQLite (aiosqlite) drivers.
+import re
+
+def normalize_db_url(raw_url: str) -> tuple[str, dict]:
+    """Normalize connection URL and connect_args for async SQLAlchemy.
+    Supports SQLite, PostgreSQL (asyncpg), Vercel Postgres, Neon, Supabase.
     """
     connect_args = {}
-    if settings.DATABASE_URL.startswith("sqlite"):
-        connect_args = {"check_same_thread": False}
+    url = raw_url.strip()
+    
+    if url.startswith("sqlite"):
+        connect_args["check_same_thread"] = False
+        return url, connect_args
+
+    # Convert standard postgres/postgresql scheme to asyncpg driver
+    if url.startswith("postgres://"):
+        url = "postgresql+asyncpg://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+
+    # Handle SSL mode for asyncpg (Vercel Postgres / Neon / Supabase use sslmode=require)
+    if "sslmode=" in url or "ssl=require" in url:
+        url = re.sub(r'([?&])sslmode=[^&]+(&?)', r'\1\2', url)
+        url = re.sub(r'([?&])ssl=[^&]+(&?)', r'\1\2', url)
+        url = url.rstrip('?&')
+        connect_args["ssl"] = "require"
+
+    return url, connect_args
+
+
+def _create_engine():
+    """Create the async engine based on DATABASE_URL or POSTGRES_URL."""
+    db_url, connect_args = normalize_db_url(settings.effective_database_url)
+    
+    if db_url.startswith("sqlite"):
         return create_async_engine(
-            settings.DATABASE_URL,
+            db_url,
             echo=settings.DEBUG,
             connect_args=connect_args,
         )
     
     return create_async_engine(
-        settings.DATABASE_URL,
+        db_url,
         pool_size=10,
         max_overflow=20,
         pool_pre_ping=True,
         echo=settings.DEBUG,
+        connect_args=connect_args,
     )
 
 

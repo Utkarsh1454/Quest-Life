@@ -55,6 +55,7 @@ async def get_current_user(
         result = await db.execute(
             select(User).where(
                 or_(
+                    User.clerk_id == str(sub),
                     func.lower(User.email) == str(email).lower(),
                     func.lower(User.username) == str(username).lower(),
                     func.lower(User.email) == f"{str(sub).lower()}@clerk.user",
@@ -66,15 +67,19 @@ async def get_current_user(
 
         if not user:
             user = User(
+                clerk_id=str(sub),
                 email=str(email).lower(),
                 username=str(username),
-                hashed_password=hash_password("clerk_authenticated_user"),
+                hashed_password=None,
                 display_name=str(display_name),
                 character_class="warrior"
             )
             db.add(user)
             await db.commit()
             await db.refresh(user)
+        elif not user.clerk_id:
+            user.clerk_id = str(sub)
+            await db.commit()
 
             stats = UserStats(
                 user_id=user.id,
