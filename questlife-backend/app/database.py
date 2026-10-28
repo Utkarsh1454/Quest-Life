@@ -27,11 +27,15 @@ def normalize_db_url(raw_url: str) -> tuple[str, dict]:
         url = "postgresql+asyncpg://" + url[len("postgresql://"):]
 
     # Handle SSL mode for asyncpg (Vercel Postgres / Neon / Supabase use sslmode=require)
-    if "sslmode=" in url or "ssl=require" in url:
-        url = re.sub(r'([?&])sslmode=[^&]+(&?)', r'\1\2', url)
-        url = re.sub(r'([?&])ssl=[^&]+(&?)', r'\1\2', url)
-        url = url.rstrip('?&')
+    is_cloud_postgres = any(domain in url for domain in ["neon.tech", "vercel-storage.com", "supabase.co"])
+    if "sslmode=" in url or "ssl=require" in url or is_cloud_postgres:
         connect_args["ssl"] = "require"
+
+    # Strip query parameters not accepted by asyncpg in the URL
+    if "?" in url:
+        base_url, query = url.split("?", 1)
+        params = [p for p in query.split("&") if p and not p.startswith(("sslmode=", "ssl=", "channel_binding=", "connect_timeout="))]
+        url = base_url + ("?" + "&".join(params) if params else "")
 
     return url, connect_args
 
